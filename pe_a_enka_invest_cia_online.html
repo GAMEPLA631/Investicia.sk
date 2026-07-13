@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peňaženka Investícia Online - GAMEPLA631 Corp</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            950: '#052e16',
+                        },
+                        render: {
+                            purple: '#46139f',
+                            pink: '#e01e5a',
+                            dark: '#0e0b16'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #09070f;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(70, 19, 159, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(224, 30, 90, 0.1) 0px, transparent 50%);
+        }
+        .glass {
+            background: rgba(20, 16, 32, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-green {
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+        }
+        .glow-red {
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+        .glow-render {
+            box-shadow: 0 0 20px rgba(70, 19, 159, 0.4);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(20, 16, 32, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(70, 19, 159, 0.5);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(224, 30, 90, 0.6);
+        }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen font-sans flex flex-col justify-between">
+
+    <!-- TOP BAR / HEADER -->
+    <header class="border-b border-white/10 glass sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-tr from-render-purple to-render-pink p-2.5 rounded-xl shadow-lg animate-pulse">
+                    <i class="fa-solid fa-wallet text-xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-extrabold tracking-tight bg-gradient-to-r from-white via-gray-200 to-brand-500 bg-clip-text text-transparent">
+                        Peňaženka Investícia Online
+                    </h1>
+                    <p class="text-xs text-gray-400 font-mono tracking-widest uppercase">
+                        by GAMEPLA631 Corporation
+                    </p>
+                </div>
+            </div>
+
+            <!-- Database Status Indicator -->
+            <div class="flex items-center space-x-6">
+                <div class="flex items-center space-x-2 bg-black/40 px-3 py-1.5 rounded-full border border-purple-500/30">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span class="text-xs font-mono text-purple-300">Render Cloud DB: Connected</span>
+                </div>
+                
+                <!-- Quick User/Admin Toggle (Useful for test and gameplay among friends) -->
+                <div class="flex bg-white/5 rounded-lg p-1 border border-white/10" id="roleSwitcherContainer">
+                    <button onclick="switchRole('client')" id="btn-role-client" class="px-3 py-1 rounded text-xs font-semibold transition bg-brand-500 text-white">
+                        <i class="fa-solid fa-user mr-1"></i> Klient
+                    </button>
+                    <button onclick="switchRole('admin')" id="btn-role-admin" class="px-3 py-1 rounded text-xs font-semibold transition text-gray-400 hover:text-white">
+                        <i class="fa-solid fa-user-gear mr-1"></i> Admin Console
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN APP CONTENT -->
+    <main class="max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- NOTIFICATION BANNER (CUSTOM MODAL SYSTEM) -->
+        <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-md w-full pointer-events-none"></div>
+
+        <!-- LEFT COLUMN: CLIENT VIEW / ACTIONS (7 cols on desktop) -->
+        <section id="client-panel" class="lg:col-span-7 space-y-6">
+            
+            <!-- STEP 1: Registration Form (if not logged in) -->
+            <div id="registration-section" class="glass rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-render-purple/10 rounded-full blur-2xl"></div>
+                
+                <h2 class="text-xl font-bold mb-2 flex items-center gap-2 text-white">
+                    <i class="fa-solid fa-id-card text-render-pink"></i>
+                    Založenie Peňaženky (Registrácia)
+                </h2>
+                <p class="text-gray-400 text-xs mb-6 font-mono">
+                    Registračný formulár prepojený na Render Cloud Database. Systém automaticky vygeneruje unikátne 30-miestne číslo peňaženky.
+                </p>
+
+                <form id="register-form" onsubmit="handleRegistration(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Celé Meno žiadateľa</label>
+                            <input type="text" id="reg-name" required placeholder="napr. Adam Sobo" class="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 text-white transition">
+                            <span class="text-[10px] text-gray-400">Musí sa presne zhodovať s dokladom totožnosti!</span>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">E-mailová adresa</label>
+                            <input type="email" id="reg-email" required placeholder="adam.sobo@email.com" class="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 text-white transition">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Telefónne číslo</label>
+                            <input type="tel" id="reg-phone" required placeholder="+421 900 123 456" class="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 text-white transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Dátum narodenia</label>
+                            <input type="date" id="reg-dob" required class="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 text-white transition">
+                        </div>
+                    </div>
+
+                    <!-- KYC Mode Picker -->
+                    <div class="border-t border-white/10 pt-4 mt-6">
+                        <label class="block text-xs font-bold text-gray-300 uppercase mb-3">Spôsob overenia totožnosti (KYC)</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="flex items-center p-3 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:border-render-purple transition">
+                                <input type="radio" name="kyc-type" value="doc" checked onchange="toggleKYCFields()" class="mr-3 text-render-purple focus:ring-render-purple">
+                                <div>
+                                    <span class="block text-xs font-bold">Doklad Totožnosti</span>
+                                    <span class="block text-[10px] text-gray-400">Overenie mena z občianskeho preukazu</span>
+                                </div>
+                            </label>
+
+                            <label class="flex items-center p-3 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:border-render-purple transition">
+                                <input type="radio" name="kyc-type" value="face" onchange="toggleKYCFields()" class="mr-3 text-render-purple focus:ring-render-purple">
+                                <div>
+                                    <span class="block text-xs font-bold">Skener Tváre (AI Biometria)</span>
+                                    <span class="block text-[10px] text-gray-400">Odhadne vek kamerou v reálnom čase</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- KYC SECTION: DOCUMENT OVERVIEW -->
+                    <div id="kyc-doc-section" class="space-y-3 bg-white/5 p-4 rounded-xl border border-white/10">
+                        <h4 class="text-xs font-bold text-render-pink uppercase"><i class="fa-solid fa-passport mr-1"></i> Nahrať Doklad (Simulované skenovanie)</h4>
+                        <div>
+                            <label class="block text-[11px] text-gray-300 mb-1">Úplné Meno vytlačené na Vašom Doklade:</label>
+                            <input type="text" id="kyc-doc-name" placeholder="napr. Adam Sobo" class="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-brand-500 text-white transition">
+                            <p class="text-[10px] text-red-400 mt-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Pozor: Ak sa meno nebude zhodovať s menom žiadateľa hore (napr. zadáš 'FIFO'), systém ťa okamžite trvalo zablokuje!</p>
+                        </div>
+                    </div>
+
+                    <!-- KYC SECTION: FACE SCANNING -->
+                    <div id="kyc-face-section" class="hidden space-y-4 bg-white/5 p-4 rounded-xl border border-white/10">
+                        <h4 class="text-xs font-bold text-blue-400 uppercase"><i class="fa-solid fa-face-viewfinder mr-1"></i> Biometrický odhad veku v reálnom čase</h4>
+                        
+                        <div class="relative w-full max-w-xs mx-auto aspect-video bg-black rounded-lg overflow-hidden border border-white/20 flex flex-col items-center justify-center">
+                            <!-- Simulated camera feed / Real Camera -->
+                            <video id="webcam" class="absolute inset-0 w-full h-full object-cover hidden" autoplay playsinline muted></video>
+                            
+                            <!-- Static biometric overlay -->
+                            <div id="camera-placeholder" class="text-center p-4">
+                                <i class="fa-solid fa-camera text-3xl text-gray-500 mb-2"></i>
+                                <span class="block text-xs text-gray-400">Kamera nie je aktívna</span>
+                            </div>
+
+                            <!-- Scanning Target Lines -->
+                            <div class="absolute inset-0 border-2 border-dashed border-blue-500/40 pointer-events-none rounded-lg m-4 flex items-center justify-center animate-pulse">
+                                <div class="w-12 h-12 border-2 border-blue-400 rounded-full animate-ping"></div>
+                            </div>
+
+                            <!-- Age Result Badge -->
+                            <div id="scan-result-badge" class="absolute bottom-2 left-2 bg-black/80 px-2 py-1 rounded text-[10px] text-blue-300 font-mono hidden">
+                                AI VEK: Kalkylujem...
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center">
+                            <button type="button" onclick="startBiometricScan()" class="bg-blue-600/30 hover:bg-blue-600/50 text-blue-200 border border-blue-500 px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2">
+                                <i class="fa-solid fa-expand"></i> Aktivovať Skener a Analyzovať vek
+                            </button>
+                        </div>
+                        <input type="hidden" id="detected-age" value="">
+                    </div>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-render-purple to-render-pink hover:opacity-90 text-white font-bold py-3 px-4 rounded-xl text-sm transition shadow-lg glow-render flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-database"></i> Odoslať registráciu do Render Cloud DB
+                    </button>
+                </form>
+            </div>
+
+            <!-- CLIENT DASHBOARD (Visible when logged in & verified) -->
+            <div id="dashboard-section" class="hidden space-y-6">
+                
+                <!-- BLOCKED SCREEN overlay structure -->
+                <div id="blocked-screen" class="hidden glass border-2 border-red-500 rounded-2xl p-8 text-center space-y-4 glow-red">
+                    <div class="w-20 h-20 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center text-4xl mx-auto animate-bounce">
+                        <i class="fa-solid fa-user-lock"></i>
+                    </div>
+                    <h3 class="text-2xl font-black text-red-500 uppercase tracking-wide">Účet bol permanentne zablokovaný!</h3>
+                    
+                    <div class="bg-black/50 p-4 rounded-xl text-left border border-red-500/20 max-w-md mx-auto space-y-2">
+                        <p class="text-xs text-red-300 font-bold uppercase"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Dôvod zablokovania:</p>
+                        <p class="text-sm text-gray-300 font-medium" id="block-reason-text">Nesúlad údajov s predloženým dokladom totožnosti (Podvodné konanie).</p>
+                    </div>
+
+                    <p class="text-xs text-gray-400">
+                        Vaša identifikačná karta preukázala nesprávne údaje žiadateľa. GAMEPLA631 Corporation z bezpečnostných dôvodov uzamkla prístup k peňaženke. Pre odblokovanie musíte kontaktovať administrátora platformy.
+                    </p>
+                    <div class="pt-4">
+                        <button onclick="logOut()" class="bg-white/10 hover:bg-white/15 px-4 py-2 rounded-lg text-xs font-semibold text-white transition">
+                            <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Späť na registráciu
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ACTIVE CLIENT STATE (Only if NOT blocked) -->
+                <div id="active-dashboard" class="space-y-6">
+                    
+                    <!-- Wallet Card Representation -->
+                    <div class="bg-gradient-to-br from-render-purple via-purple-900 to-indigo-950 rounded-2xl p-6 shadow-2xl relative overflow-hidden border border-white/10 glow-render">
+                        <div class="absolute -right-10 -bottom-10 w-44 h-44 bg-render-pink/20 rounded-full blur-3xl"></div>
+                        <div class="absolute top-4 right-4 text-white/20 text-4xl font-extrabold tracking-wider font-mono">GAMEPLA631</div>
+                        
+                        <div class="flex justify-between items-start mb-8">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-purple-300 font-mono">Názov účtu / Klient</p>
+                                <h3 class="text-xl font-bold text-white tracking-wide" id="dash-client-name">Adam Sobo</h3>
+                                <p class="text-xs text-white/70" id="dash-client-email">adam@email.com</p>
+                            </div>
+                            <span class="bg-green-500/20 text-green-300 border border-green-500/30 px-2.5 py-1 rounded text-[10px] font-bold font-mono uppercase tracking-wider">
+                                Aktívna Peňaženka
+                            </span>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-purple-300 font-mono">30-Miestne Identifikačné Číslo Peňaženky</p>
+                                <div class="flex items-center justify-between bg-black/40 p-2.5 rounded-lg border border-white/5 font-mono text-[11px] text-white">
+                                    <span id="dash-wallet-id" class="tracking-widest">000000000000000000000000000000</span>
+                                    <button onclick="copyWalletId()" class="text-gray-400 hover:text-white transition p-1" title="Kopírovať">
+                                        <i class="fa-solid fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+                                <div>
+                                    <span class="block text-[10px] uppercase text-purple-300 font-mono">Dostupný limit na nákup</span>
+                                    <span class="text-xl font-extrabold text-green-400">10,00 € Max</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] uppercase text-purple-300 font-mono">Aktívny Dlh (Suma na vrátenie)</span>
+                                    <span class="text-xl font-extrabold text-red-400" id="dash-active-debt">0.00 €</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- REQUEST A MICRO-LOAN (Žiadosť o kúpenie niečoho Online) -->
+                    <div class="glass rounded-2xl p-6 border border-white/10 space-y-4">
+                        <h3 class="text-lg font-bold flex items-center gap-2 text-white">
+                            <i class="fa-solid fa-cart-shopping text-brand-500"></i>
+                            Žiadosť o nákup (Max 10 Euro)
+                        </h3>
+                        <p class="text-xs text-gray-400">
+                            Vyplňte, čo chcete zakúpiť online. Naša spoločnosť **GAMEPLA631 Corporation** to za vás zaplatí a do vášho účtu na tejto stránke vygeneruje faktúru, ktorú musíte vrátiť do stanoveného termínu.
+                        </p>
+
+                        <form id="loan-request-form" onsubmit="handleLoanRequest(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Čo chcete kúpiť? (Názov položky / Odkaz)</label>
+                                <input type="text" id="loan-item" required placeholder="napr. Hra na Steame, Minecraft skin..." class="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 text-white transition">
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Suma v Eurách (Max 10.00 €)</label>
+                                    <div class="relative">
+                                        <input type="number" id="loan-amount" min="1" max="10" step="0.01" required placeholder="10.00" class="w-full bg-black/40 border border-white/15 rounded-xl pl-4 pr-12 py-2.5 text-sm focus:outline-none focus:border-brand-500 text-white transition">
+                                        <span class="absolute right-4 top-2.5 text-gray-400 font-mono text-sm">EUR</span>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-1">Prekročenie 10€ nie je možné.</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-300 uppercase mb-1">Odkaz na platbu / obchod (nepovinné)</label>
+                                    <input type="url" id="loan-link" placeholder="https://store.steampowered.com/..." class="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 text-white transition">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition shadow-lg glow-green flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i> Odoslať žiadosť adminovi GAMEPLA631
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- ACTIVE INVOICES / FAkTÚRY SECTION -->
+                    <div class="glass rounded-2xl p-6 border border-white/10 space-y-4">
+                        <h3 class="text-lg font-bold flex items-center gap-2 text-white">
+                            <i class="fa-solid fa-file-invoice-dollar text-yellow-500"></i>
+                            Moje Aktívne Faktúry
+                        </h3>
+                        
+                        <div id="invoices-list-container" class="space-y-4">
+                            <!-- Invoices will be dynamically rendered here -->
+                        </div>
+                    </div>
+
+                    <!-- ACTION BUTTONS: Logout & Restart -->
+                    <div class="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10">
+                        <span class="text-xs text-gray-400">Prihlásený ako: <strong class="text-white" id="current-user-badge">Adam</strong></span>
+                        <button onclick="logOut()" class="bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-300 transition">
+                            <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Odhlásiť sa
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: ADMIN CONSOLE & RENDER CLOUD DB EXPLORER (5 cols on desktop) -->
+        <section id="admin-panel" class="lg:col-span-5 space-y-6">
+
+            <!-- ADMIN ACCESS GUARD / CONSOLE -->
+            <div class="glass rounded-2xl p-6 border border-white/10 relative overflow-hidden" id="admin-main-section">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-brand-500/10 rounded-full blur-2xl"></div>
+                
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-user-tie text-brand-500"></i>
+                        GAMEPLA631 Administrácia
+                    </h3>
+                    <span class="bg-brand-500/10 text-brand-400 border border-brand-500/20 px-2 py-0.5 rounded text-[10px] font-mono uppercase">
+                        Master Admin
+                    </span>
+                </div>
+
+                <!-- Admin Action Panels -->
+                <div class="space-y-6">
+                    <!-- Section 1: Manage Loan Requests -->
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-300 uppercase mb-3 flex items-center justify-between">
+                            <span>Prichádzajúce žiadosti o nákup</span>
+                            <span class="bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded text-[10px]" id="admin-request-count">0</span>
+                        </h4>
+                        <div id="admin-requests-list" class="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+                            <!-- Will be populated dynamically -->
+                            <div class="text-center py-6 text-xs text-gray-500 bg-black/20 rounded-xl border border-dashed border-white/15">
+                                Žiadne čakajúce žiadosti o peniaze
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Manage Registered Wallets (Block / Issue Penalties) -->
+                    <div class="border-t border-white/10 pt-4">
+                        <h4 class="text-xs font-bold text-gray-300 uppercase mb-3">Zoznam registrovaných peňaženiek</h4>
+                        <div id="admin-users-list" class="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                            <!-- Populated dynamically -->
+                            <div class="text-center py-6 text-xs text-gray-500 bg-black/20 rounded-xl">
+                                Žiadne registrované účty v databáze
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RENDER CLOUD DATABASE LIVE EXPLORER -->
+            <div class="glass rounded-2xl p-6 border border-white/10 relative overflow-hidden bg-black/90">
+                <div class="absolute top-0 right-0 p-2">
+                    <span class="text-[9px] bg-render-purple px-1.5 py-0.5 rounded text-white font-mono uppercase">PG-V15</span>
+                </div>
+                
+                <div class="flex items-center space-x-2 mb-3">
+                    <div class="h-2 w-2 rounded-full bg-indigo-500 animate-pulse"></div>
+                    <h3 class="text-xs font-extrabold text-purple-300 font-mono uppercase tracking-wider">
+                        Render Cloud Databáza: live_tables
+                    </h3>
+                </div>
+
+                <p class="text-[11px] text-gray-400 font-mono mb-4">
+                    Obsah vzdialenej databázy Render. Všetky registrácie, zmluvy a dlhy sú uložené a monitorované v reálnom čase.
+                </p>
+
+                <!-- Render Terminal Tabs -->
+                <div class="flex space-x-2 border-b border-white/10 pb-2 mb-3 text-[11px] font-mono">
+                    <button onclick="switchDbTab('users')" id="db-tab-users" class="text-purple-300 font-bold border-b-2 border-purple-500 pb-1 px-1">
+                        users_table
+                    </button>
+                    <button onclick="switchDbTab('invoices')" id="db-tab-invoices" class="text-gray-400 hover:text-white pb-1 px-1">
+                        invoices_table
+                    </button>
+                </div>
+
+                <!-- Database Content Output -->
+                <div class="bg-black/80 rounded-xl p-3 border border-white/5 font-mono text-xs overflow-x-auto">
+                    <pre id="db-json-output" class="text-emerald-400 max-h-[220px] overflow-y-auto leading-relaxed">{}</pre>
+                </div>
+
+                <div class="mt-3 flex justify-between items-center text-[10px] text-gray-500 font-mono">
+                    <span>Host: gp631-db-postgresql.render.com</span>
+                    <button onclick="resetWholeDatabase()" class="text-red-400 hover:underline">
+                        <i class="fa-solid fa-trash-can mr-1"></i> Vyčistiť celú databázu
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER SECTION -->
+    <footer class="border-t border-white/10 glass py-6 px-4 mt-12">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-gray-400">
+            <div class="text-center md:text-left">
+                <p class="font-bold text-gray-300 mb-1">GAMEPLA631 Corporation S.r.o.</p>
+                <p>Upozornenie: Táto platforma slúži výhradne na priateľské vnútorné účely, správu pôžičiek a investícií medzi komunitou.</p>
+            </div>
+            <div class="text-center md:text-right font-mono text-[11px]">
+                <p class="text-red-400 font-bold">Zmluvná pokuta za omeškanie splátky: 50,00 € + 10,00 € istina!</p>
+                <p>© 2026 GAMEPLA631 Corp. Všetky práva vyhradené.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT CORE SYSTEM -->
+    <script>
+        // --- GLOBAL STATE SIMULATING CLOUD DATABASE ---
+        let db_tab = 'users'; // Active table viewed in database explorer
+        let activeRole = 'client'; // client or admin
+        let currentUser = null; // Currently logged in user object
+
+        // Load DB from LocalStorage (Render Database Simulation)
+        let render_db = {
+            users: [],
+            invoices: [],
+            requests: []
+        };
+
+        // Initialize state on window load
+        window.onload = function() {
+            loadDatabase();
+            checkSession();
+            updateUI();
+        };
+
+        // Save DB back to localStorage
+        function saveDatabase() {
+            localStorage.setItem('gamepla_render_db', JSON.stringify(render_db));
+            renderDbExplorerOutput();
+        }
+
+        // Load DB with dummy/initial data if empty
+        function loadDatabase() {
+            const data = localStorage.getItem('gamepla_render_db');
+            if (data) {
+                render_db = JSON.parse(data);
+            } else {
+                // Prepopulate with a mock user for illustration
+                render_db.users = [
+                    {
+                        id: "GP-742918459381745920184758392015",
+                        name: "Adam Sobo",
+                        email: "adam.sobo@gmail.com",
+                        phone: "+421 900 123 456",
+                        dob: "2000-05-15",
+                        status: "Aktívny", // Aktívny, Zablokovaný
+                        kyc_type: "doc",
+                        verified: true,
+                        block_reason: ""
+                    }
+                ];
+                render_db.invoices = [
+                    {
+                        invoiceId: "FA-2026-001",
+                        userId: "GP-742918459381745920184758392015",
+                        amount: 10.00,
+                        item: "Steam Wallet 10€ Card",
+                        created: "2026-07-01",
+                        dueDate: "2026-07-15",
+                        status: "Splatná", // Splatná, VyžiadanéZmazanie, Uhradená
+                        penaltyApplied: false
+                    }
+                ];
+                render_db.requests = [];
+                saveDatabase();
+            }
+        }
+
+        // Save session state
+        function checkSession() {
+            const sessionUserId = localStorage.getItem('gamepla_session_user_id');
+            if (sessionUserId) {
+                const user = render_db.users.find(u => u.id === sessionUserId);
+                if (user) {
+                    currentUser = user;
+                }
+            }
+        }
+
+        // Toggle user or admin view
+        function switchRole(role) {
+            activeRole = role;
+            const clientBtn = document.getElementById('btn-role-client');
+            const adminBtn = document.getElementById('btn-role-admin');
+            
+            if (role === 'admin') {
+                clientBtn.className = "px-3 py-1 rounded text-xs font-semibold transition text-gray-400 hover:text-white";
+                adminBtn.className = "px-3 py-1 rounded text-xs font-semibold transition bg-brand-500 text-white";
+                showToast("Admin Režim", "Boli ste prepnutý do administratívneho panelu.", "info");
+            } else {
+                clientBtn.className = "px-3 py-1 rounded text-xs font-semibold transition bg-brand-500 text-white";
+                adminBtn.className = "px-3 py-1 rounded text-xs font-semibold transition text-gray-400 hover:text-white";
+                showToast("Klientsky Režim", "Prepnuté do rozhrania žiadateľa.", "info");
+            }
+            updateUI();
+        }
+
+        // Custom Notification Utility (Toast Generator)
+        function showToast(title, message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let iconClass = "fa-circle-check text-green-400";
+            let borderClass = "border-green-500/30";
+            if (type === 'error') {
+                iconClass = "fa-circle-xmark text-red-500 animate-shake";
+                borderClass = "border-red-500/40";
+            } else if (type === 'info') {
+                iconClass = "fa-circle-info text-blue-400";
+                borderClass = "border-blue-500/30";
+            } else if (type === 'warning') {
+                iconClass = "fa-triangle-exclamation text-yellow-500";
+                borderClass = "border-yellow-500/30";
+            }
+
+            toast.className = `glass ${borderClass} border p-4 rounded-xl shadow-lg flex items-start gap-3 pointer-events-auto transition duration-300 transform translate-x-10 opacity-0`;
+            toast.innerHTML = `
+                <div class="text-lg mt-0.5"><i class="fa-solid ${iconClass}"></i></div>
+                <div class="flex-grow">
+                    <h5 class="text-xs font-extrabold text-white">${title}</h5>
+                    <p class="text-[11px] text-gray-300 mt-0.5">${message}</p>
+                </div>
+                <button class="text-gray-400 hover:text-white text-xs" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
+            `;
+
+            container.appendChild(toast);
+            
+            // Animate In
+            setTimeout(() => {
+                toast.classList.remove('translate-x-10', 'opacity-0');
+            }, 10);
+
+            // Auto Remove after 4s
+            setTimeout(() => {
+                toast.classList.add('translate-x-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4500);
+        }
+
+        // --- KYC FIELD MANAGEMENT ---
+        function toggleKYCFields() {
+            const kycType = document.querySelector('input[name="kyc-type"]:checked').value;
+            const docSection = document.getElementById('kyc-doc-section');
+            const faceSection = document.getElementById('kyc-face-section');
+            
+            if (kycType === 'doc') {
+                docSection.classList.remove('hidden');
+                faceSection.classList.add('hidden');
+                stopCamera();
+            } else {
+                docSection.classList.add('hidden');
+                faceSection.classList.remove('hidden');
+            }
+        }
+
+        // Face AI Scanner Camera Simulation
+        let videoStream = null;
+        function startBiometricScan() {
+            const video = document.getElementById('webcam');
+            const placeholder = document.getElementById('camera-placeholder');
+            const badge = document.getElementById('scan-result-badge');
+            
+            showToast("Inicializujem biometriu", "Spúšťam AI model skenovania tváre...", "info");
+
+            // Try to access actual camera for immersive look
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                .then(stream => {
+                    videoStream = stream;
+                    video.srcObject = stream;
+                    video.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    runScanningAnimation(badge);
+                })
+                .catch(err => {
+                    // Fallback to pure animated simulation if webcam blocked/unavailable
+                    console.warn("Webcam blocked or unavailable. Running simulated scanning visualization.", err);
+                    showToast("Simulované skenovanie", "Webkamera nedostupná. Spúšťam biometrickú simuláciu.", "warning");
+                    runScanningAnimation(badge, true);
+                });
+        }
+
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            const video = document.getElementById('webcam');
+            const placeholder = document.getElementById('camera-placeholder');
+            if (video) video.classList.add('hidden');
+            if (placeholder) placeholder.classList.remove('hidden');
+        }
+
+        function runScanningAnimation(badge, isSimulated = false) {
+            badge.classList.remove('hidden');
+            badge.innerText = "BIOMETRIA: KALKULUJEM...";
+            let ageProgress = 0;
+            
+            const interval = setInterval(() => {
+                const randomAge = Math.floor(Math.random() * 20) + 12; // visual flickering age
+                badge.innerText = `AI DETEKCIA: ${randomAge} r.`;
+                ageProgress += 10;
+                
+                if (ageProgress >= 100) {
+                    clearInterval(interval);
+                    // Final Age Outcome
+                    const finalAge = Math.floor(Math.random() * 12) + 16; // Random target age (16-27)
+                    document.getElementById('detected-age').value = finalAge;
+                    badge.innerHTML = `AI DETEKOVANÝ VEK: <strong class="text-emerald-400 font-bold">${finalAge} rokov</strong>`;
+                    
+                    if (finalAge < 18) {
+                        showToast("Vekové Obmedzenie AI", `Váš detekovaný vek je ${finalAge} rokov. Služby GAMEPLA631 sú povolené len od 18 rokov.`, "error");
+                    } else {
+                        showToast("Overenie úspešné", `AI potvrdilo vek ${finalAge} rokov. Spĺňate podmienky.`, "success");
+                    }
+                    stopCamera();
+                }
+            }, 250);
+        }
+
+        // Generate dynamic 30-digit Wallet ID from library logic (without hardcoding)
+        function generate30DigitWalletId() {
+            // Generates a 30 character long random integer sequence
+            let id = "GP-";
+            for(let i = 0; i < 27; i++) {
+                id += Math.floor(Math.random() * 10);
+            }
+            return id;
+        }
+
+        // HANDLE USER REGISTRATION
+        function handleRegistration(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const dob = document.getElementById('reg-dob').value;
+            const kycType = document.querySelector('input[name="kyc-type"]:checked').value;
+            
+            // Check if user already exists
+            const existing = render_db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+            if (existing) {
+                showToast("Chyba registrácie", "Užívateľ s týmto e-mailom je už zaregistrovaný v Render DB.", "error");
+                return;
+            }
+
+            const newWalletId = generate30DigitWalletId();
+            let isBlocked = false;
+            let blockReason = "";
+
+            // --- STRICT VERIFICATION LOGIC ---
+            if (kycType === 'doc') {
+                const docName = document.getElementById('kyc-doc-name').value.trim();
+                // If ID document name is different from requested wallet name (e.g., "FIFO" vs "Adam Sobo")
+                if (name.toLowerCase() !== docName.toLowerCase()) {
+                    isBlocked = true;
+                    blockReason = `Zistený pokus o identifikačný podvod. Žiadateľ vystupuje pod menom "${name}", ale doklad totožnosti patrí osobe "${docName}".`;
+                }
+            } else {
+                // Face recognition verification
+                const detectedAgeVal = document.getElementById('detected-age').value;
+                if (!detectedAgeVal) {
+                    showToast("Chyba KYC", "Pred odoslaním registrácie musíte spustiť a dokončiť biometrický sken tváre!", "error");
+                    return;
+                }
+                const age = parseInt(detectedAgeVal);
+                if (age < 18) {
+                    isBlocked = true;
+                    blockReason = `Zlyhanie vekového limitu. AI biometrický odhad nahlásil vek ${age} rokov (Minimum je 18 rokov). Účet bol zablokovaný pre nedovolenú registráciu mladistvého.`;
+                }
+            }
+
+            // Create user object
+            const newUser = {
+                id: newWalletId,
+                name: name,
+                email: email,
+                phone: phone,
+                dob: dob,
+                status: isBlocked ? "Zablokovaný" : "Aktívny",
+                kyc_type: kycType,
+                verified: !isBlocked,
+                block_reason: blockReason
+            };
+
+            // Save to Render simulated DB
+            render_db.users.push(newUser);
+            saveDatabase();
+
+            // Set Current active user session
+            currentUser = newUser;
+            localStorage.setItem('gamepla_session_user_id', newUser.id);
+
+            if (isBlocked) {
+                showToast("Účet ZABLOKOVANÝ", "Registrácia bola zablokovaná z dôvodu bezpečnostného rizika!", "error");
+            } else {
+                showToast("Peňaženka Vytvorená", "Úspešne zaregistrované v Render Cloud Database a priradené 30-miestne ID.", "success");
+            }
+
+            // Reset form fields
+            document.getElementById('register-form').reset();
+            const badge = document.getElementById('scan-result-badge');
+            if(badge) badge.classList.add('hidden');
+            
+            updateUI();
+        }
+
+        // LOGOUT SESSION
+        function logOut() {
+            currentUser = null;
+            localStorage.removeItem('gamepla_session_user_id');
+            showToast("Odhlásenie", "Boli ste úspešne odhlásený.", "info");
+            updateUI();
+        }
+
+        // COPY 30 DIGIT ID TO CLIPBOARD
+        function copyWalletId() {
+            const textElement = document.getElementById('dash-wallet-id');
+            if (textElement) {
+                // Standard copy method for iframe restrictions
+                const tempTextArea = document.createElement("textarea");
+                tempTextArea.value = textElement.innerText;
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempTextArea);
+                showToast("Skopírované", "ID peňaženky bolo úspešne skopírované do schránky.", "success");
+            }
+        }
+
+        // --- CLIENT MICRO-LOAN REQUEST ---
+        function handleLoanRequest(event) {
+            event.preventDefault();
+            if (!currentUser) return;
+
+            // Blocked safety check
+            if (currentUser.status === 'Zablokovaný') {
+                showToast("Nepovolená akcia", "Zablokovaný používateľ nemôže žiadať o prostriedky.", "error");
+                return;
+            }
+
+            // Check if user has active unpaid invoice
+            const userInvoices = render_db.invoices.filter(i => i.userId === currentUser.id && i.status !== 'Uhradená');
+            if (userInvoices.length > 0) {
+                showToast("Aktívny dlh", "Máte nehradené faktúry. Musíte ich najprv vyrovnať!", "error");
+                return;
+            }
+
+            const item = document.getElementById('loan-item').value.trim();
+            const amount = parseFloat(document.getElementById('loan-amount').value);
+            const link = document.getElementById('loan-link').value.trim();
+
+            if (amount > 10.00) {
+                showToast("Prekročený limit", "Maximálna výška pôžičky je 10.00 Eur!", "error");
+                return;
+            }
+
+            const newRequest = {
+                requestId: "REQ-" + Math.floor(Math.random() * 10000),
+                userId: currentUser.id,
+                userName: currentUser.name,
+                item: item,
+                amount: amount,
+                link: link,
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            render_db.requests.push(newRequest);
+            saveDatabase();
+            
+            showToast("Žiadosť Odoslaná", "Vaša žiadosť o " + amount.toFixed(2) + "€ bola poslaná na posúdenie administrátorovi.", "success");
+            document.getElementById('loan-request-form').reset();
+            updateUI();
+        }
+
+        // CLIENT REQUESTS PAY BACK NOTIFICATION TO ADMIN
+        function notifyRepayment(invoiceId) {
+            const invoice = render_db.invoices.find(i => i.invoiceId === invoiceId);
+            if (invoice) {
+                invoice.status = "VyžiadanéZmazanie";
+                saveDatabase();
+                showToast("Správa odoslaná", "Adminovi bola odoslaná správa, že ste peniaze vrátili. Faktúra bude po schválení zmazaná z databázy.", "info");
+                updateUI();
+            }
+        }
+
+
+        // --- ADMIN CONSOLE INTERACTION LOGIC ---
+        function adminApproveLoan(requestId) {
+            const requestIndex = render_db.requests.findIndex(r => r.requestId === requestId);
+            if (requestIndex === -1) return;
+
+            const req = render_db.requests[requestIndex];
+
+            // Create Invoice
+            const invoiceId = "FA-" + (new Date().getFullYear()) + "-" + Math.floor(Math.random() * 9000 + 1000);
+            
+            // Due date is set exactly to 7 days from now
+            const due = new Date();
+            due.setDate(due.getDate() + 7);
+            const dueDateString = due.toISOString().split('T')[0];
+
+            const newInvoice = {
+                invoiceId: invoiceId,
+                userId: req.userId,
+                amount: req.amount,
+                item: req.item,
+                created: new Date().toISOString().split('T')[0],
+                dueDate: dueDateString,
+                status: "Splatná",
+                penaltyApplied: false
+            };
+
+            render_db.invoices.push(newInvoice);
+            // Delete the processed request
+            render_db.requests.splice(requestIndex, 1);
+            
+            saveDatabase();
+            showToast("Nákup schválený", "Kúpené! Faktúra vo výške " + req.amount.toFixed(2) + "€ bola priradená používateľovi.", "success");
+            updateUI();
+        }
+
+        function adminRejectLoan(requestId) {
+            const requestIndex = render_db.requests.findIndex(r => r.requestId === requestId);
+            if (requestIndex !== -1) {
+                render_db.requests.splice(requestIndex, 1);
+                saveDatabase();
+                showToast("Žiadosť zamietnutá", "Žiadosť bola vymazaná z čakacej listiny.", "warning");
+                updateUI();
+            }
+        }
+
+        // ADMIN DELETES INVOICE AFTER REPAYMENT (Dlh vyrovnaný)
+        function adminClearInvoice(invoiceId) {
+            const index = render_db.invoices.findIndex(i => i.invoiceId === invoiceId);
+            if (index !== -1) {
+                const inv = render_db.invoices[index];
+                
+                // Remove entirely from Render simulated database
+                render_db.invoices.splice(index, 1);
+                saveDatabase();
+                
+                showToast("Dlh vymazaný", `Faktúra ${invoiceId} bola kompletne vymazaná z Render databázy.`, "success");
+                updateUI();
+            }
+        }
+
+        // ADMIN TRIGGER PENALTY (50€ Pokuta za omeškanie + 10€ = 60€)
+        function adminApplyPenalty(invoiceId) {
+            const invoice = render_db.invoices.find(i => i.invoiceId === invoiceId);
+            if (invoice) {
+                invoice.amount = 60.00; // 50€ penalty + 10€
+                invoice.penaltyApplied = true;
+                
+                // Set user to blocked state instantly
+                const user = render_db.users.find(u => u.id === invoice.userId);
+                if (user) {
+                    user.status = "Zablokovaný";
+                    user.block_reason = `Nezaplatenie faktúry v splatnej lehote k termínu ${invoice.dueDate}. GAMEPLA631 Corporation udala zmluvnú pokutu 50€ a dočasne zmrazila účet.`;
+                }
+
+                saveDatabase();
+                showToast("Pokuta udelená", "Zákonná pokuta 50€ bola priradená a klient bol zablokovaný.", "error");
+                updateUI();
+            }
+        }
+
+        // ADMIN UNBLOCK USER
+        function adminUnblockUser(userId) {
+            const user = render_db.users.find(u => u.id === userId);
+            if (user) {
+                user.status = "Aktívny";
+                user.block_reason = "";
+                
+                // If there was an invoice that caused block, we also clear it or reset to original if requested
+                saveDatabase();
+                showToast("Užívateľ Odblokovaný", `Prístup pre ${user.name} bol úspešne obnovený.`, "success");
+                updateUI();
+            }
+        }
+
+        // ADMIN DELETE USER PERMANENTLY (Zmazanie z databázy)
+        function adminDeleteUser(userId) {
+            const index = render_db.users.findIndex(u => u.id === userId);
+            if (index !== -1) {
+                const uName = render_db.users[index].name;
+                
+                // Clear all associated invoices
+                render_db.invoices = render_db.invoices.filter(i => i.userId !== userId);
+                // Remove user
+                render_db.users.splice(index, 1);
+                
+                // If logged out user is the deleted one
+                if (currentUser && currentUser.id === userId) {
+                    currentUser = null;
+                    localStorage.removeItem('gamepla_session_user_id');
+                }
+
+                saveDatabase();
+                showToast("Používateľ zmazaný", `${uName} bol permanentne odstránený z Render Cloud DB.`, "error");
+                updateUI();
+            }
+        }
+
+        // RESET SYSTEM DATABASE
+        function resetWholeDatabase() {
+            if(confirm("Naozaj chcete kompletne vymazať celú Render Cloud Databázu a začať nanovo?")) {
+                localStorage.removeItem('gamepla_render_db');
+                localStorage.removeItem('gamepla_session_user_id');
+                currentUser = null;
+                loadDatabase();
+                showToast("Render Databáza Resetovaná", "Všetky tabuľky boli vyčistené na predvolené továrenské nastavenia.", "warning");
+                updateUI();
+            }
+        }
+
+
+        // --- REACTIVE USER INTERFACE UPDATE LOOPS ---
+        function switchDbTab(tab) {
+            db_tab = tab;
+            document.getElementById('db-tab-users').className = tab === 'users' ? "text-purple-300 font-bold border-b-2 border-purple-500 pb-1 px-1" : "text-gray-400 hover:text-white pb-1 px-1";
+            document.getElementById('db-tab-invoices').className = tab === 'invoices' ? "text-purple-300 font-bold border-b-2 border-purple-500 pb-1 px-1" : "text-gray-400 hover:text-white pb-1 px-1";
+            renderDbExplorerOutput();
+        }
+
+        function renderDbExplorerOutput() {
+            const out = document.getElementById('db-json-output');
+            if (db_tab === 'users') {
+                out.innerText = JSON.stringify(render_db.users, null, 2);
+            } else {
+                out.innerText = JSON.stringify(render_db.invoices, null, 2);
+            }
+        }
+
+        function updateUI() {
+            // Render cloud database explorer update
+            renderDbExplorerOutput();
+
+            // 1. Role switcher layout adjustment
+            if (activeRole === 'admin') {
+                document.getElementById('admin-main-section').classList.remove('hidden');
+                document.getElementById('client-panel').classList.add('hidden');
+            } else {
+                document.getElementById('admin-main-section').classList.add('hidden');
+                document.getElementById('client-panel').classList.remove('hidden');
+            }
+
+            // 2. Client Authentication states
+            const regSec = document.getElementById('registration-section');
+            const dashSec = document.getElementById('dashboard-section');
+
+            if (currentUser) {
+                regSec.classList.add('hidden');
+                dashSec.classList.remove('hidden');
+                
+                // Fetch fresh status from database (in case admin blocked/edited them)
+                const freshUser = render_db.users.find(u => u.id === currentUser.id);
+                if (freshUser) {
+                    currentUser = freshUser;
+                }
+
+                // Layout based on block state
+                const activeDash = document.getElementById('active-dashboard');
+                const blockedScreen = document.getElementById('blocked-screen');
+                
+                if (currentUser.status === 'Zablokovaný') {
+                    activeDash.classList.add('hidden');
+                    blockedScreen.classList.remove('hidden');
+                    document.getElementById('block-reason-text').innerText = currentUser.block_reason || "Účet bol zablokovaný administrátorom.";
+                } else {
+                    activeDash.classList.remove('hidden');
+                    blockedScreen.classList.add('hidden');
+
+                    // Set user details
+                    document.getElementById('dash-client-name').innerText = currentUser.name;
+                    document.getElementById('dash-client-email').innerText = currentUser.email;
+                    document.getElementById('dash-wallet-id').innerText = currentUser.id;
+                    document.getElementById('current-user-badge').innerText = currentUser.name;
+
+                    // Calculate active debt
+                    const userInvoices = render_db.invoices.filter(i => i.userId === currentUser.id);
+                    let debtTotal = 0;
+                    userInvoices.forEach(i => {
+                        if (i.status !== 'Uhradená') debtTotal += i.amount;
+                    });
+                    document.getElementById('dash-active-debt').innerText = debtTotal.toFixed(2) + " €";
+
+                    // Dynamic Client Invoices rendering
+                    const invoicesList = document.getElementById('invoices-list-container');
+                    invoicesList.innerHTML = "";
+
+                    if (userInvoices.length === 0) {
+                        invoicesList.innerHTML = `<div class="text-center py-6 text-xs text-gray-500">Nemáte žiadne aktívne faktúry ani dlhy.</div>`;
+                    } else {
+                        userInvoices.forEach(inv => {
+                            const isLate = new Date(inv.dueDate) < new Date() && inv.status !== 'Uhradená';
+                            
+                            let statusBadge = `<span class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded text-[10px] font-bold">Splatná</span>`;
+                            if (inv.status === 'VyžiadanéZmazanie') {
+                                statusBadge = `<span class="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded text-[10px] font-bold animate-pulse">Preveruje sa vrátenie</span>`;
+                            } else if (inv.status === 'Uhradená') {
+                                statusBadge = `<span class="bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded text-[10px] font-bold">Uhradené</span>`;
+                            }
+
+                            if (inv.penaltyApplied) {
+                                statusBadge = `<span class="bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded text-[10px] font-bold animate-bounce">POKUTA 50€ ULOŽENÁ</span>`;
+                            }
+
+                            invoicesList.innerHTML += `
+                                <div class="bg-black/30 p-4 rounded-xl border ${inv.penaltyApplied ? 'border-red-500/30 glow-red' : 'border-white/5'} flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-xs font-mono font-bold text-gray-300">${inv.invoiceId}</span>
+                                            ${statusBadge}
+                                        </div>
+                                        <p class="text-sm font-semibold text-white">${inv.item}</p>
+                                        <div class="flex flex-wrap gap-4 text-[10px] text-gray-400 mt-1 font-mono">
+                                            <span>Suma: <strong class="text-white text-xs">${inv.amount.toFixed(2)} €</strong></span>
+                                            <span>Dátum: ${inv.created}</span>
+                                            <span class="${isLate ? 'text-red-400 font-bold animate-pulse' : ''}">Splatnosť do: ${inv.dueDate}</span>
+                                        </div>
+                                    </div>
+
+                                    ${inv.status === 'Splatná' ? `
+                                        <button onclick="notifyRepayment('${inv.invoiceId}')" class="bg-green-600/20 hover:bg-green-600/30 text-green-300 border border-green-500/30 px-3.5 py-1.5 rounded-lg text-xs font-bold transition w-full md:w-auto">
+                                            <i class="fa-solid fa-receipt mr-1"></i> Označiť ako Vrátené
+                                        </button>
+                                    ` : `
+                                        <span class="text-[11px] text-gray-400 italic">Čaká na spracovanie</span>
+                                    `}
+                                </div>
+                            `;
+                        });
+                    }
+                }
+            } else {
+                regSec.classList.remove('hidden');
+                dashSec.classList.add('hidden');
+            }
+
+            // 3. ADMIN INTERACTION RENDERS
+            // 3a. Incoming Loan Requests
+            const adminReqsList = document.getElementById('admin-requests-list');
+            const reqCountBadge = document.getElementById('admin-request-count');
+            
+            reqCountBadge.innerText = render_db.requests.length;
+            adminReqsList.innerHTML = "";
+
+            if (render_db.requests.length === 0) {
+                adminReqsList.innerHTML = `
+                    <div class="text-center py-6 text-xs text-gray-500 bg-black/20 rounded-xl border border-dashed border-white/10">
+                        Žiadne čakajúce žiadosti o nákup
+                    </div>
+                `;
+            } else {
+                render_db.requests.forEach(req => {
+                    adminReqsList.innerHTML += `
+                        <div class="bg-black/40 p-3 rounded-xl border border-white/10 space-y-2">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h5 class="text-xs font-bold text-white">${req.userName}</h5>
+                                    <p class="text-[10px] text-gray-400 font-mono">${req.userId}</p>
+                                </div>
+                                <span class="bg-brand-500/20 text-brand-300 text-xs font-bold font-mono px-2 py-0.5 rounded">
+                                    ${req.amount.toFixed(2)} €
+                                </span>
+                            </div>
+                            <div class="bg-black/30 p-2 rounded text-xs">
+                                <span class="text-[10px] uppercase text-gray-500 block">Položka na zakúpenie:</span>
+                                <span class="font-semibold text-white">${req.item}</span>
+                                ${req.link ? `<a href="${req.link}" target="_blank" class="block text-blue-400 hover:underline text-[10px] mt-1 overflow-hidden text-ellipsis whitespace-nowrap"><i class="fa-solid fa-link mr-1"></i> Odkaz na eshop</a>` : ''}
+                            </div>
+                            <div class="flex gap-2 pt-1">
+                                <button onclick="adminApproveLoan('${req.requestId}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-xs transition">
+                                    <i class="fa-solid fa-check mr-1"></i> Schváliť & Kúpiť
+                                </button>
+                                <button onclick="adminRejectLoan('${req.requestId}')" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 py-1 px-2 rounded text-xs transition">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // 3b. Manage All Registered Users in Database
+            const adminUsersList = document.getElementById('admin-users-list');
+            adminUsersList.innerHTML = "";
+
+            if (render_db.users.length === 0) {
+                adminUsersList.innerHTML = `
+                    <div class="text-center py-6 text-xs text-gray-500 bg-black/20 rounded-xl">
+                        Žiadni zaregistrovaní používatelia
+                    </div>
+                `;
+            } else {
+                render_db.users.forEach(user => {
+                    const activeUserInvoices = render_db.invoices.filter(i => i.userId === user.id);
+                    
+                    // Build invoice section inside users list
+                    let invoicesSectionHTML = "";
+                    if (activeUserInvoices.length > 0) {
+                        invoicesSectionHTML = `<div class="mt-2 pt-2 border-t border-white/5 space-y-1.5">`;
+                        activeUserInvoices.forEach(inv => {
+                            let actionBtn = "";
+                            if (inv.status === 'VyžiadanéZmazanie') {
+                                actionBtn = `
+                                    <button onclick="adminClearInvoice('${inv.invoiceId}')" class="bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold px-1.5 py-0.5 rounded text-[9px] transition">
+                                        <i class="fa-solid fa-check"></i> Overiť & Zmazať Dlh
+                                    </button>
+                                `;
+                            } else if (inv.status === 'Splatná' && !inv.penaltyApplied) {
+                                actionBtn = `
+                                    <button onclick="adminApplyPenalty('${inv.invoiceId}')" class="bg-red-500 hover:bg-red-600 text-white px-1.5 py-0.5 rounded text-[9px] transition">
+                                        <i class="fa-solid fa-gavel"></i> Pokutovať 50€
+                                    </button>
+                                `;
+                            }
+
+                            invoicesSectionHTML += `
+                                <div class="flex items-center justify-between text-[11px] bg-black/40 p-1.5 rounded">
+                                    <span>${inv.invoiceId} (${inv.amount.toFixed(2)}€)</span>
+                                    <div class="flex gap-1">
+                                        ${actionBtn}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        invoicesSectionHTML += `</div>`;
+                    } else {
+                        invoicesSectionHTML = `<p class="text-[10px] text-gray-500 italic mt-1">Bez aktívnych dlhov</p>`;
+                    }
+
+                    adminUsersList.innerHTML += `
+                        <div class="bg-black/30 p-3 rounded-xl border ${user.status === 'Zablokovaný' ? 'border-red-500/20 bg-red-950/5' : 'border-white/5'} space-y-2">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="flex items-center gap-1.5">
+                                        <h5 class="text-xs font-bold text-white">${user.name}</h5>
+                                        <span class="text-[9px] px-1 rounded ${user.status === 'Zablokovaný' ? 'bg-red-500/20 text-red-300' : 'bg-green-500/20 text-green-300'} font-bold">
+                                            ${user.status}
+                                        </span>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 font-mono">${user.email}</p>
+                                    <p class="text-[9px] text-purple-400 font-mono tracking-tighter">${user.id}</p>
+                                </div>
+                                <div class="flex gap-1">
+                                    ${user.status === 'Zablokovaný' ? `
+                                        <button onclick="adminUnblockUser('${user.id}')" class="bg-green-500/20 hover:bg-green-500/30 text-green-300 p-1 rounded text-xs transition" title="Odblokovať">
+                                            <i class="fa-solid fa-unlock"></i>
+                                        </button>
+                                    ` : ''}
+                                    <button onclick="adminDeleteUser('${user.id}')" class="bg-red-500/20 hover:bg-red-500/30 text-red-400 p-1 rounded text-xs transition" title="Odstrániť účet z Render DB">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            ${invoicesSectionHTML}
+                        </div>
+                    `;
+                });
+            }
+        }
+    </script>
+</body>
+</html>
